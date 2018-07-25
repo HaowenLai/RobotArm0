@@ -117,8 +117,8 @@ TfNetwork::TfNetwork(string path,string moduleName,string funcName)
     if (!Py_IsInitialized()) 
         printf("initialize failed.\n");
     
-    char* meaningless = NULL;
-    char** meaningless1 = &meaningless;
+    wchar_t* meaningless = NULL;
+    wchar_t** meaningless1 = &meaningless;
     PySys_SetArgv(0, meaningless1);
     PyRun_SimpleString("import sys");
     

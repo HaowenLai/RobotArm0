@@ -1,3 +1,5 @@
+.vscode
 build/
 data/
 src/__pycache__
+src/number_classify.pyc

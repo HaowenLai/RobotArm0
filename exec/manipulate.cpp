@@ -6,7 +6,7 @@
 #include "parameters.hpp"
 #include "UsbCAN.hpp"
 #include "control.hpp"
-#include "ArucoMarker.hpp"
+#include "position.hpp"
 #include "RsVideoCapture.hpp"
 #include <stdio.h>
 #include <iostream>
@@ -27,26 +27,41 @@ static inline void helpMsg()
             "key '7' : select motor 7\n"
             "key ',' : increase value\n"
             "key '.' : decrease value\n"
+            "key 'r' : reset to initial position\n"
+            "key 'z' : decrease speed(step)\n"
+            "key 'x' : increase speed(step)\n"
             "---press <Enter> to continue---";
     cin.get();
 }
+
+static void onMouse( int event, int x, int y, int, void* window_name )
+{
+	if( event == cv::EVENT_LBUTTONDOWN )
+	{
+		cout<<x<<","<<y<<endl;
+	}
+}
+
 
 int main()
 {
     using namespace robot_arm::cameraParams;
 
-    // ArucoMarker rsMarker(vector<int>({5,6,8}), RS_CM, RS_Dist);
-    // ArucoMarker m2Marker0(vector<int>({4}), arm_CM, arm_Dist);
-    // ArucoMarker m2Marker1(vector<int>({4}), upper_CM, upper_Dist);
+    ArucoMarker rsMarker(vector<int>({6}), RS_CM, RS_Dist);
+    ArucoMarker upperMarker(vector<int>({4}), upper_CM, upper_Dist);
+    CubePosition armCube(robot_arm::cubePos::armArea,
+                         1600,
+                         500);  //arm
 
-    // VideoCapture camera0(0);    //arm camera
-    // VideoCapture camera1(1);    //upper camera
-    // RsVideoCapture camera_rs;
-    // if(!camera0.isOpened())
-    // {
-    //     cout<<"cannot open camera"<<endl;
-    //     return -1;
-    // }
+
+
+    VideoCapture armCamera(3);   //arm camera
+    RsVideoCapture rsCamera;
+    /*if(!upperCamera.isOpened())
+    {
+        cout<<"cannot open camera"<<endl;
+        return -1;
+    }*/
 
     UsbCAN canII;
     if(canII.initCAN(UsbCAN::BAUDRATE_250K))
@@ -54,42 +69,38 @@ int main()
         cout<<"CAN init successfully"<<endl;
     }
 
-    // Mat img0,img1,img2;
+    Mat rsImg,armImg,upperImg;
     helpMsg();
     namedWindow("front",WINDOW_AUTOSIZE);
-    // namedWindow("arm",WINDOW_AUTOSIZE);
-    // namedWindow("upper",WINDOW_AUTOSIZE);
+    //namedWindow("upper",WINDOW_AUTOSIZE);
+    namedWindow("arm",WINDOW_AUTOSIZE);
+    cv::setMouseCallback( "arm", onMouse, NULL );
     
     //Arm1 init
-    vector<int> newValue1 {150,50,150,125,250,15,100};
-    //fixStepMove(newValue1,canII,0);
+    vector<int> newValue1;
+    reset2initPos(newValue1,canII,0);
 
     //control logic variables
     int motorNum = 0;
     int pwmValue = 128;
+    int step = 1;
     
     while(1)
     {
-        // camera_rs >> img0;
-        // camera0   >> img1;
-        // camera1   >> img2;
-        // rsMarker.detect(img0);
-        // rsMarker.outputOffset(img0,Point(30,30));
-        // m2Marker0.detect(img1);
-        // m2Marker0.outputOffset(img1,Point(30,30));
-        // m2Marker1.detect(img2);
-        // m2Marker1.outputOffset(img2,Point(30,30));
-        // imshow("front",img0);
-        // imshow("arm",img1);
-        // imshow("upper",img2);
-
-        // if(m2Marker1.index(4)!=-1)
-        // {
-        //     auto m1angle = motor1moveAngle(m2Marker1.offset_tVecs[m2Marker1.index(4)]);
-        //     newValue1[0] = -90.91 * m1angle + 127;
-        //     fixStepMove(newValue1,canII,1);
-        //     cout << m1angle << endl;
-        // }
+        rsCamera    >> rsImg;
+        //upperCamera >> upperImg;
+        armCamera   >> armImg;
+        
+        rsMarker.detect(rsImg);
+        rsMarker.outputOffset(rsImg,Point(30,30));
+        //upperMarker.detect(upperImg);
+        //upperMarker.outputOffset(upperImg,Point(30,30));
+        armCube.detect(armImg);
+        armCube.drawBoundry(armImg);
+        
+        imshow("front",rsImg);
+        //imshow("upper",upperImg);
+        imshow("arm",armImg);
 
         switch ((char)waitKey(30))
         {
@@ -108,7 +119,7 @@ int main()
           case '7':
             motorNum = 6;break;
           case ',':
-            pwmValue = (pwmValue==255)?255:pwmValue+1;
+            pwmValue = (pwmValue==255)?255:pwmValue+step;
             newValue1[motorNum] = pwmValue;
             fixStepMove(newValue1,canII,0);
             for(int i=0;i<7;i++)
@@ -116,7 +127,7 @@ int main()
             cout<<endl;
             break;
           case '.':
-            pwmValue = (pwmValue==0)?0:pwmValue-1;
+            pwmValue = (pwmValue==0)?0:pwmValue-step;
             newValue1[motorNum] = pwmValue;
             fixStepMove(newValue1,canII,0);
             for(int i=0;i<7;i++)
@@ -124,8 +135,15 @@ int main()
             cout<<endl;
             break;
           case 'r':
-            newValue1 = vector<int> {150,50,150,125,250,15,100};
-            fixStepMove(newValue1,canII,0);
+            reset2initPos(newValue1,canII,0);
+            break;
+          case 'z':
+            step=(step==1)?1:step-1;
+            cout<<"step is"<<step<<endl;
+            break;
+          case 'x':
+            step++;
+            cout<<"step is"<<step<<endl;
             break;
           
           default:

@@ -10,8 +10,7 @@
 
 #include "UsbCAN.hpp"
 #include "BpNetwork.hpp"
-#include "LettersClassify.hpp"
-#include "ArucoMarker.hpp"
+#include "position.hpp"
 #include "RsVideoCapture.hpp"
 #include "control.hpp"
 #include "Wifi.hpp"
@@ -72,7 +71,7 @@ int main()
         tfPredict(canII);
         break;
       case 6:
-        letterSort();
+        //letterSort();
         break;
       case 7:
         wifiClient();
@@ -224,7 +223,7 @@ void tfPredict(UsbCAN& canII)
     }
 }
 
-
+/*
 //a test to LetterClassify.py
 void letterSort()
 {
@@ -255,6 +254,7 @@ void letterSort()
             cout<<"wrong!!@@##"<<endl;
     }
 }
+*/
 
 
 //wifi client to send and receive message

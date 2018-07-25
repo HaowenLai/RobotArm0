@@ -16,26 +16,24 @@
 #include <Python.h>
 
 
-
-class LettersClassify
+class NumberClassify
 {
  public:
-    enum Letters
+    enum Numbers
     {
-        LETTER_b,
-        LETTER_e,
-        LETTER_f,
-        LETTER_x,
+        NUMBER_4,
+        NUMBER_8,
+        NUMBER_BLANK,
         NO_LETTER_ERROR
     };
 
-    LettersClassify(std::string path,
+    NumberClassify(std::string path,
                     std::string moduleName,
                     std::string funcName);
-    ~LettersClassify();
+    ~NumberClassify();
     
     //input and output can be the same variable
-    Letters detect(cv::Mat& InputImage);
+    Numbers detect(cv::Mat& InputImage);
 
   private:
     PyObject* pModule;      //module obj

@@ -8,21 +8,21 @@
  * Copyright(c) All right reserved
  * ********************************************************/
 
-#include "LettersClassify.hpp"
+#include "NumberClassify.hpp"
 
 using namespace std;
 using namespace cv;
 
 //-------------------------Class `LettersClassify` ------------------------
 //public
-LettersClassify::LettersClassify(string path,string moduleName,string funcName)
+NumberClassify::NumberClassify(string path,string moduleName,string funcName)
 {
     Py_Initialize();
     if (!Py_IsInitialized()) 
         printf("initialize failed.\n");
     
-    char* meaningless = NULL;
-    char** meaningless1 = &meaningless;
+    wchar_t* meaningless = NULL;
+    wchar_t** meaningless1 = &meaningless;
     PySys_SetArgv(0, meaningless1);
     PyRun_SimpleString("import sys");
     
@@ -52,7 +52,7 @@ LettersClassify::LettersClassify(string path,string moduleName,string funcName)
     }
 }
 
-LettersClassify::~LettersClassify()
+NumberClassify::~NumberClassify()
 {
     Py_CLEAR(pModule);
     Py_CLEAR(pDict);
@@ -61,7 +61,7 @@ LettersClassify::~LettersClassify()
 }
 
 
-LettersClassify::Letters LettersClassify::detect(cv::Mat& InputImage)
+NumberClassify::Numbers NumberClassify::detect(cv::Mat& InputImage)
 {
     const int IMAGE_HEIGHT = 50;
     const int IMAGE_WIDTH  = 50;
@@ -98,13 +98,11 @@ LettersClassify::Letters LettersClassify::detect(cv::Mat& InputImage)
     switch(rtVal)
     {
       case 0:
-        return LETTER_b;
+        return NUMBER_4;
       case 1:
-        return LETTER_e;
+        return NUMBER_8;
       case 2:
-        return LETTER_f;
-      case 3:
-        return LETTER_x;
+        return NUMBER_BLANK;
       default:
         return NO_LETTER_ERROR;
     }

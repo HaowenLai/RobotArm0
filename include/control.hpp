@@ -12,15 +12,21 @@
 
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include "position.hpp"
 #include "UsbCAN.hpp"
 #include "BpNetwork.hpp"
 
 //robot arm event flag, for camera thread control
 namespace robot_arm
 {
-    enum EVENT_FLAG
+    enum CHECK_SURFACE
     {
-        TAKE_ROI,
+        CHECK_BOTTOM_SURFACE,
+        CHECK_BACK_SURFACE,
+        CHECK_FRONT_SURFACE,
+        CHECK_UPPER_SURFACE,
+        CHECK_LEFT_SURFACE,
+        CHECK_RIGHT_SURFACE,
         MISSION_OK
     };
     enum MOVEMENT_METHOD
@@ -35,7 +41,7 @@ namespace robot_arm
 //It will not return until the new values are reached. Be aware
 //that some motors may reach their final values earlier.
 //@CAUTION: step should be positive integer!
-void fixStepMove(std::vector<int>& newVals,
+void fixStepMove(std::vector<int> const&  newVals,
                  UsbCAN& canDev,
                  int ID);
 
@@ -45,7 +51,7 @@ void fixStepMove(std::vector<int>& newVals,
 //reach the desired positon. It will not return until the new 
 //values are reached. 
 //@CAUTION: step should be positive integer!
-void evenVelMove(std::vector<int>& newVals,
+void evenVelMove(std::vector<int> const& newVals,
                  UsbCAN& canDev,
                  int ID);
 
@@ -72,17 +78,38 @@ void move2desiredPos(double x,double y,
 //its height in the img.
 double obstacleHeight(cv::Mat depthRaw,
                       float depthScale,
-                      cv::Point2f targetPos);
+                      cv::Point2f targetPos,
+                      int frontPixelOffset);
 
 
 //  This function retrun the angle between the target and the 
 //yOz plane. Motor 1 should turn pass this angle so as to make
 //the arms and the target in the same plane.
 double motor1moveAngle(cv::Vec3d targetPos);
+//
+//
+// This function return the value that motor1 should move in
+//order to reach the position that is above the target. It 
+//works based on func `motor1moveAngle`, and its coeffictients
+//are calculated by Matlab.
+int motor1moveValue(cv::Vec3d targetPos,double upperMmOffset = 0);
 
 
 //  wait until the image of letter to be detected is ready
-void getDetectImg(robot_arm::EVENT_FLAG& flag);
+void getDetectImg(robot_arm::CHECK_SURFACE mission,
+                  robot_arm::CHECK_SURFACE& flag,
+                  UsbCAN& canDev,
+                  int ID);
 
+
+//  Before the arm can grab cubes precisely, it should be calibrated
+//using this function. The function calculate the offsets in horizontal
+//direction of the front camera and upper camera.
+void selfCalibration(ArucoMarker& frontMarker,
+                     ArucoMarker& upperMarker,
+                     double& frontMmOffset, double& upperMmOffset,
+                     int& frontPixelOffset, int& upperPixelOffset,
+                     UsbCAN& canDev,
+                     int ID);
 
 #endif

@@ -7,18 +7,27 @@ import os
 execution_path = os.path.join(os.path.split(os.getcwd())[0],'data')
 IMAGE_HEIGHT = 50
 IMAGE_WIDTH  = 50
-rtVal={'b':[0],'e':[1],'f':[2],'x':[3]}
+rtVal={'4':[0],'8':[1],'blank':[2]}
 
 # load model
 prediction = CustomImagePrediction()
 prediction.setModelTypeAsResNet()
-prediction.setModelPath(os.path.join(execution_path, "model_ex-182_acc-1.000000.h5"))
+prediction.setModelPath(os.path.join(execution_path, "model_ex-097_acc-0.766667.h5"))
 prediction.setJsonPath(os.path.join(execution_path, "model_class.json"))
-prediction.loadModel(num_objects=4)
+prediction.loadModel(num_objects=7)
 
 def main(imgList):
     img = np.array(imgList,dtype=np.uint8)
     img = np.reshape(img,(IMAGE_HEIGHT,IMAGE_WIDTH,3))
     predictions, probabilities = prediction.predictImage(img,input_type='array', result_count=1)
-    
-    return tuple(rtVal[predictions[0]])
+
+    print('from py file: %s' % predictions[0])
+    print('probability is %s' % probabilities[0])
+
+    #merge class
+    if predictions[0] == '4-0' or predictions[0] == '4-90' or predictions[0] == '4-180' or predictions[0] == '4-270':
+        return tuple(rtVal['4'])
+    elif predictions[0] == '8-0' or predictions[0] == '8-180':
+        return tuple(rtVal['8'])
+    else:
+        return tuple(rtVal['blank'])
